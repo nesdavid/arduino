@@ -11,9 +11,13 @@
 
 #define IN_TO_OUT (OUT_DOWN - IN_DOWN)
 
+#define IN_TO_TONE -2
+
 #define MAX_STEPS 20
 int steps[MAX_STEPS];
 int cur_step;
+
+int tones[] = {130, 260, 330, 580};
 
 void setup() 
 {
@@ -23,6 +27,8 @@ void setup()
     pinMode(i, INPUT);
   }
 
+  pinMode(6, INPUT);
+
   for (int i=OUT_DOWN; i<=OUT_UP; ++i)
   {
     pinMode(i, OUTPUT);
@@ -30,7 +36,6 @@ void setup()
 
   cur_step = 0;
   randomSeed(analogRead(0));
-
 }
 
 #define PC_MODE 0
@@ -82,6 +87,7 @@ void loop()
         Serial.print("writing to");
         Serial.println(steps[i]);
         digitalWrite(steps[i] + IN_TO_OUT, HIGH);
+        tone(6, tones[steps[i]+IN_TO_TONE], 1000);
         delay(1000);
         digitalWrite(steps[i] + IN_TO_OUT, LOW);
       }

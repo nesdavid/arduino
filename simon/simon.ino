@@ -1,11 +1,13 @@
 #define IN_DOWN 2
 #define IN_LEFT 3 
 #define IN_UP 4  
-#define IN_MAX 5
+#define IN_MAX IN_UP + 1 
 
 #define OUT_DOWN 8
 #define OUT_LEFT 9 
 #define OUT_UP 10  
+#define OUT_MAX OUT_UP + 1
+#define OUT_FIRST OUT_DOWN
 
 #define IN_TO_OUT (OUT_DOWN - IN_DOWN)
 
@@ -41,8 +43,29 @@ int wait_for_input;
 
 void generate_new_random()
 {
-  steps[cur_step] = random(2, 4);
+  steps[cur_step] = random(IN_DOWN, IN_MAX);
   Serial.println(steps[cur_step]);
+}
+
+void play_game_over_and_reset()
+{
+  Serial.println("GAME OVER");
+  //maybe not needed
+  mode = GAME_OVER;
+
+  for (int i=OUT_FIRST; i<OUT_MAX; ++i)
+  {
+    digitalWrite(i, LOW);
+  }
+
+  for (int i=OUT_FIRST; i<OUT_MAX; ++i)
+  {
+    digitalWrite(i, HIGH);
+    delay(500);
+  }
+
+  cur_step = 0;
+  mode = PC_MODE;
 }
 
 void loop()
@@ -60,6 +83,7 @@ void loop()
         Serial.println(steps[i]);
         digitalWrite(steps[i] + IN_TO_OUT, HIGH);
         delay(1000);
+        digitalWrite(steps[i] + IN_TO_OUT, LOW);
       }
 
       mode = USER_MODE;
@@ -85,21 +109,33 @@ void loop()
         if (read)
         {
           wait_for_input = i;
+          Serial.print("read player input:");
+          Serial.println(i);
           if (steps[user_step] == i)
           {
             user_step++;
+            Serial.println("added step");
             if (user_step == cur_step)
             {
               delay(500);
               mode = PC_MODE;
+              Serial.println("All correct. pc mode");
             }
+          }
+          else
+          {
+              //GAME OVER
+              play_game_over_and_reset();
           }
         }
       }
     }
     else
     {
-      wait_for_input = digitalRead(wait_for_input);
+      if (digitalRead(wait_for_input) == 0)
+      {
+        wait_for_input = 0;
+      }
     }
   }
 }

@@ -9,6 +9,8 @@
 #define OUT_MAX OUT_UP + 1
 #define OUT_FIRST OUT_DOWN
 
+#define SOUND_PIN 6
+
 #define IN_TO_OUT (OUT_DOWN - IN_DOWN)
 
 #define IN_TO_TONE -2
@@ -27,7 +29,7 @@ void setup()
     pinMode(i, INPUT);
   }
 
-  pinMode(6, INPUT);
+  pinMode(SOUND_PIN, INPUT);
 
   for (int i=OUT_DOWN; i<=OUT_UP; ++i)
   {
@@ -77,6 +79,11 @@ void loop()
 {
   if (mode == PC_MODE)
   {
+    for (int i=OUT_FIRST; i<OUT_MAX; ++i)
+    {
+        digitalWrite(i, LOW);
+    }
+
     if (cur_step < MAX_STEPS)
     {
       generate_new_random();
@@ -87,9 +94,10 @@ void loop()
         Serial.print("writing to");
         Serial.println(steps[i]);
         digitalWrite(steps[i] + IN_TO_OUT, HIGH);
-        tone(6, tones[steps[i]+IN_TO_TONE], 1000);
+        tone(SOUND_PIN, tones[steps[i]+IN_TO_TONE], 1000);
         delay(1000);
         digitalWrite(steps[i] + IN_TO_OUT, LOW);
+        delay(300);
       }
 
       mode = USER_MODE;
@@ -111,6 +119,10 @@ void loop()
       {
         int read = digitalRead(i);
         digitalWrite(i+ IN_TO_OUT, read);
+        if (read)
+        {
+          tone(SOUND_PIN, tones[i+IN_TO_TONE]);
+        }
 
         if (read)
         {
@@ -124,6 +136,9 @@ void loop()
             if (user_step == cur_step)
             {
               delay(500);
+              digitalWrite(i+ IN_TO_OUT, LOW);
+              noTone(SOUND_PIN);
+              delay(1000);
               mode = PC_MODE;
               Serial.println("All correct. pc mode");
             }
@@ -141,6 +156,7 @@ void loop()
       if (digitalRead(wait_for_input) == 0)
       {
         wait_for_input = 0;
+        noTone(SOUND_PIN);
       }
     }
   }
